@@ -117,6 +117,7 @@ def publicarUbicacion(event, context):
         
         correo = body.get("correo")
         nombre = body.get("nombre")
+        calle = body.get("calle")
         
         try:
             lat_float = float(body["latitud"])
@@ -142,6 +143,7 @@ def publicarUbicacion(event, context):
             'tenant_id': nombre,
             'latitud': lat_decimal,   
             'longitud': lon_decimal,
+            'calle': calle,
             'uuid': correo
         }
         
