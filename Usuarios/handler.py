@@ -34,10 +34,9 @@ def registrarUsuario(event, context):
 
         usuarioTable=boto3.resource('dynamodb').Table(USUARIOS_TABLE)
         usuarioJson={
-            'tenant_id': correo,
-            'nombre': nombre,
+            'tenant_id': nombre,
+            'uuid':correo,
             'edad': edad,
-            'uuid': str(uuid.uuid4()),
             'contrasena_hash': contrasena_hash
         }
         usuarioTable.put_item(Item=usuarioJson) 
@@ -62,9 +61,10 @@ def loginUsuario(event, context):
         
         correo = body["correo"]
         contrasena = body["contrasena"]
+        nombre=body["nombre"]
 
         usuarioTable = boto3.resource('dynamodb').Table(USUARIOS_TABLE)
-        response = usuarioTable.get_item(Key={'tenant_id': correo})
+        response = usuarioTable.get_item(Key={'tenant_id': nombre, 'uuid': correo})
         
         if 'Item' not in response:
             return {
