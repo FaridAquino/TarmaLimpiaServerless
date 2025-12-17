@@ -11,10 +11,15 @@ CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
 
 def registrarUsuario(event, context):
     try:
-        nombre=event["requestContext"]["nombre"]
-        edad=event["requestContext"]["edad"]
-        correo=event["requestContext"]["correo"]
-        contrasena=event["requestContext"]["contrasena"]
+        if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body) en la petición'})}
+        
+        body = json.loads(event['body'])
+
+        nombre=body["nombre"]
+        edad=body["edad"]
+        correo=body["correo"]
+        contrasena=body["contrasena"]
 
         # Hashing de la contraseña
         salt = os.urandom(16)
@@ -49,8 +54,14 @@ def registrarUsuario(event, context):
 
 def loginUsuario(event, context):
     try:
-        correo = event["requestContext"]["correo"]
-        contrasena = event["requestContext"]["contrasena"]
+        
+        if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body) en la petición'})}
+        
+        body = json.loads(event['body'])
+        
+        correo = body["correo"]
+        contrasena = body["contrasena"]
 
         usuarioTable = boto3.resource('dynamodb').Table(USUARIOS_TABLE)
         response = usuarioTable.get_item(Key={'tenant_id': correo})
@@ -97,10 +108,15 @@ def loginUsuario(event, context):
         }
 
 def publicarUbicacion(event, context):
-    correo=event["requestContext"]["correo"]
-    nombre=event["requestContext"]["nombre"]
-    latitud=event["requestContext"]["latitud"]
-    longitud=event["requestContext"]["longitud"]
+    if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body) en la petición'})}
+        
+    body = json.loads(event['body'])
+    
+    correo=body["correo"]
+    nombre=body["nombre"]
+    latitud=body["latitud"]
+    longitud=body["longitud"]
 
     ubicacionTable=boto3.resource('dynamodb').Table(UBICACIONES_TABLE)
     ubicacionJson={
