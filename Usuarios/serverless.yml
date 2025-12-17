@@ -10,9 +10,6 @@ provider:
   
   iam:
     role: arn:aws:iam::885475026169:role/LabRole
-  
-  httpApi:
-    cors: true
 
   websocketsApiName: api-websocket-tarma-limpia-${self:provider.stage}
   websocketsApiRouteSelectionExpression: $request.body.action
@@ -38,11 +35,6 @@ custom:
   connectionsTable: ConnectionsTarmaLimpia
   
 functions:
-  publishPedido:
-    handler: handler.publishPedido
-    events:
-      - websocket:
-          route: PublishPedido
 
   connectionHandler:
     handler: handler.connection_manager 
@@ -57,19 +49,29 @@ functions:
     events:
       - websocket: $default
 
-  pagarPedido:
-    handler: handler.pagarPedido
+  registerUsuario:
+    handler: handler.registerUsuario
     events:
-      - httpApi:
-          path: /pagar
+      - http:
+          path: /register
           method: post
+          cors: true
 
-  receiveWebhook:
-    handler: handler.receiveWebhook
+  loginUsuario:
+    handler: handler.loginUsuario
     events:
-      - httpApi:
-          path: /webhook
+      - http:
+          path: /login
           method: post
+          cors: true
+
+  publicarUbiacion:
+    handler: handler.publicarUbiacion
+    events:
+      - http:
+          path: /publicarUbicacion
+          method: post
+          cors: true
 
 resources:
   Resources:
