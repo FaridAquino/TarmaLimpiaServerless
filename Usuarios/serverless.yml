@@ -1,5 +1,5 @@
 org: faridaquino
-service: api-websocket
+service: api-tarma-limpia
 
 provider:
   name: aws
@@ -14,7 +14,7 @@ provider:
   httpApi:
     cors: true
 
-  websocketsApiName: api-websocket
+  websocketsApiName: api-websocket-tarma-limpia-${self:provider.stage}
   websocketsApiRouteSelectionExpression: $request.body.action
 
   environment:
