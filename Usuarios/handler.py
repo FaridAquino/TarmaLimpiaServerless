@@ -5,9 +5,9 @@ import hashlib
 import uuid
 import boto3
 
-USUARIO_TABLE = os.environ['USUARIO_TABLE']
+USUARIOS_TABLE = os.environ['USUARIOS_TABLE']
 UBICACIONES_TABLE = os.environ['UBICACIONES_TABLE']
-CONNECTIONS_TABLE = os.environ.get('CONNECTIONS_TABLE')
+CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
 
 def registrarUsuario(event, context):
     try:
@@ -27,7 +27,7 @@ def registrarUsuario(event, context):
 
         contrasena_hash = salt.hex() + ":" + hash_bytes.hex()
 
-        usuarioTable=boto3.resource('dynamodb').Table(USUARIO_TABLE)
+        usuarioTable=boto3.resource('dynamodb').Table(USUARIOS_TABLE)
         usuarioJson={
             'tenant_id': correo,
             'nombre': nombre,
@@ -52,7 +52,7 @@ def loginUsuario(event, context):
         correo = event["requestContext"]["correo"]
         contrasena = event["requestContext"]["contrasena"]
 
-        usuarioTable = boto3.resource('dynamodb').Table(USUARIO_TABLE)
+        usuarioTable = boto3.resource('dynamodb').Table(USUARIOS_TABLE)
         response = usuarioTable.get_item(Key={'tenant_id': correo})
         
         if 'Item' not in response:
