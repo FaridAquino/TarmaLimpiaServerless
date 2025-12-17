@@ -1,0 +1,118 @@
+org: faridaquino
+service: api-websocket
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 29
+  region: us-east-1
+  stage: dev
+  
+  iam:
+    role: arn:aws:iam::885475026169:role/LabRole
+  
+  httpApi:
+    cors: true
+
+  websocketsApiName: api-websocket
+  websocketsApiRouteSelectionExpression: $request.body.action
+
+  environment:
+    USUARIOS_TABLE: ${self:custom.usuariosTable}
+    UBICACIONES_TABLE: ${self:custom.ubicacionesTable}
+    CONNECTIONS_TABLE: ${self:custom.connectionsTable}
+    
+package:
+  patterns:
+    - '!node_modules/**'       # Ignorar carpeta de node
+    - '!.serverless/**'        # Ignorar carpeta oculta de despliegue
+    - '!venv/**'               # Ignorar entorno virtual (si tienes uno)
+    - '!__pycache__/**'        # Ignorar archivos compilados de python
+    - '!package-lock.json'
+    - ./** # Incluir todo lo demás (tu código + librerías instaladas)
+
+
+custom:
+  usuariosTable: Usuarios
+  ubicacionesTable: Ubicaciones
+  connectionsTable: Connections
+  
+functions:
+  publishPedido:
+    handler: handler.publishPedido
+    events:
+      - websocket:
+          route: PublishPedido
+
+  connectionHandler:
+    handler: handler.connection_manager 
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+
+  defaultHandler:
+    handler: handler.default_handler
+    events:
+      - websocket: $default
+
+  pagarPedido:
+    handler: handler.pagarPedido
+    events:
+      - httpApi:
+          path: /pagar
+          method: post
+
+  receiveWebhook:
+    handler: handler.receiveWebhook
+    events:
+      - httpApi:
+          path: /webhook
+          method: post
+
+resources:
+  Resources:
+    UsuariosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.usuariosTable}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.connectionsTable}
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    UbicacionesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.ubicacionesTable}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
