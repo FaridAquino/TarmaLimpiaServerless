@@ -4,6 +4,7 @@ import os
 import hashlib
 import uuid
 import boto3
+from decimal import Decimal
 
 USUARIOS_TABLE = os.environ['USUARIOS_TABLE']
 UBICACIONES_TABLE = os.environ['UBICACIONES_TABLE']
@@ -93,7 +94,7 @@ def loginUsuario(event, context):
         if hmac.compare_digest(hash_intento, hash_real_bytes):
             return {
                 'statusCode': 200,
-                'body': json.dumps({'message': 'Login exitoso', 'uuid': response['Item']['uuid']})
+                'body': json.dumps({'message': 'Login exitoso'})
             }
         else:
             return {
@@ -108,30 +109,54 @@ def loginUsuario(event, context):
         }
 
 def publicarUbicacion(event, context):
-    if 'body' not in event or event['body'] is None:
-            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body) en la petición'})}
+    try:
+        if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body)'})}
         
-    body = json.loads(event['body'])
-    
-    correo=body["correo"]
-    nombre=body["nombre"]
-    latitud=body["latitud"]
-    longitud=body["longitud"]
+        body = json.loads(event['body']) 
+        
+        correo = body.get("correo")
+        nombre = body.get("nombre")
+        
+        try:
+            lat_float = float(body["latitud"])
+            lon_float = float(body["longitud"])
+        except (ValueError, TypeError):
+            return {
+                'statusCode': 400, 
+                'body': json.dumps({'error': 'Latitud y Longitud deben ser números válidos'})
+            }
 
-    ubicacionTable=boto3.resource('dynamodb').Table(UBICACIONES_TABLE)
-    ubicacionJson={
-        'tenant_id': correo,
-        'nombre': nombre,
-        'latitud': latitud,
-        'longitud': longitud,
-        'uuid': str(uuid.uuid4())
-    }
-    ubicacionTable.put_item(Item=ubicacionJson)
+        if not (-90 <= lat_float <= 90):
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Latitud inválida (debe estar entre -90 y 90)'})}
+        
+        if not (-180 <= lon_float <= 180):
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Longitud inválida (debe estar entre -180 y 180)'})}
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'message': 'Ubicación almacenada exitosamente'})
-    }
+        lat_decimal = Decimal(str(lat_float))
+        lon_decimal = Decimal(str(lon_float))
+
+        ubicacionTable = boto3.resource('dynamodb').Table(UBICACIONES_TABLE)
+        
+        ubicacionJson = {
+            'tenant_id': nombre,
+            'latitud': lat_decimal,   
+            'longitud': lon_decimal,
+            'uuid': correo
+        }
+        
+        ubicacionTable.put_item(Item=ubicacionJson)
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Ubicación almacenada exitosamente'})
+        }
+
+    except KeyError as e:
+        return {'statusCode': 400, 'body': json.dumps({'error': f'Falta el campo: {str(e)}'})}
+    except Exception as e:
+        print(e)
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 
 #WEBSOCKET
 
