@@ -49,8 +49,8 @@ functions:
     events:
       - websocket: $default
 
-  registerUsuario:
-    handler: handler.registerUsuario
+  registrarUsuario:
+    handler: handler.registrarUsuario
     events:
       - http:
           path: /register
@@ -65,8 +65,8 @@ functions:
           method: post
           cors: true
 
-  publicarUbiacion:
-    handler: handler.publicarUbiacion
+  publicarUbicacion:
+    handler: handler.publicarUbicacion
     events:
       - http:
           path: /publicarUbicacion
