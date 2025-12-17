@@ -33,9 +33,9 @@ package:
 
 
 custom:
-  usuariosTable: Usuarios
-  ubicacionesTable: Ubicaciones
-  connectionsTable: Connections
+  usuariosTable: UsuariosTarmaLimpia
+  ubicacionesTable: UbicacionesTarmaLimpia
+  connectionsTable: ConnectionsTarmaLimpia
   
 functions:
   publishPedido:
