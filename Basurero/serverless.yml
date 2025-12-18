@@ -1,0 +1,98 @@
+org: faridaquino
+service: api-tarma-limpia-basurero
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 29
+  region: us-east-1
+  stage: dev
+  
+  iam:
+    role: arn:aws:iam::885475026169:role/LabRole
+
+  websocketsApiName: api-websocket-tarma-limpia-basurero-${self:provider.stage}
+  websocketsApiRouteSelectionExpression: $request.body.action
+
+  environment:
+    RUTA_TABLE: ${self:custom.rutaTable}
+    UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
+    CONNECTIONS_TABLE: ConnectionsTarmaLimpia
+    USUARIOS_TABLE: UsuariosTarmaLimpia
+
+package:
+  patterns:
+    - '!node_modules/**'       # Ignorar carpeta de node
+    - '!.serverless/**'        # Ignorar carpeta oculta de despliegue
+    - '!venv/**'               # Ignorar entorno virtual (si tienes uno)
+    - '!__pycache__/**'        # Ignorar archivos compilados de python
+    - '!package-lock.json'
+    - ./** # Incluir todo lo demás (tu código + librerías instaladas)
+
+
+custom:
+  rutaTable: RutaTarmaLimpia
+  ubicacionBasureroTable: UbicacionBasureroTarmaLimpia
+  
+functions:
+
+  connectionHandler:
+    handler: handler.connection_manager 
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+
+  defaultHandler:
+    handler: handler.default_handler
+    events:
+      - websocket: $default
+
+  registrarRuta:
+    handler: handler.registrarRuta
+    events:
+      - http:
+          path: /registrarRuta
+          method: post
+          cors: true
+
+  publicarUbicacion:
+    handler: handler.publicarUbicacion
+    events:
+      - websocket:
+          route: publicarUbicacion
+
+resources:
+  Resources:
+    RutasTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.rutaTable}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+    UbicacionBasureroTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.ubicacionBasureroTable}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST

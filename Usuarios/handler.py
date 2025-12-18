@@ -162,60 +162,6 @@ def publicarUbicacion(event, context):
 
 #WEBSOCKET
 
-def transmitir(event, message_payload_dict):
-    try:
-        connections_table = boto3.resource('dynamodb').Table(CONNECTIONS_TABLE)
-    except Exception as e:
-        print(f"[Error Transmitir] No se pudieron cargar las tablas: {e}")
-        return
-    
-    try:
-        endpoint_url = f"https://{event['requestContext']['domainName']}/{event['requestContext']['stage']}"
-        apigateway_client = boto3.client('apigatewaymanagementapi', endpoint_url=endpoint_url)
-    except KeyError:
-        print(f"[Error Transmitir] El evento no tiene 'requestContext' para el endpoint_url.")
-        return
-
-    pedido_data = message_payload_dict.get('pedido', {})
-    
-    if not pedido_data:
-        print("[Error Transmitir] No se encontró el objeto 'pedido' en el payload.")
-        return
-
-    try:
-        response = connections_table.scan(ProjectionExpression='connectionId, #r',ExpressionAttributeNames={'#r': 'role'})
-        connections = response.get('Items', [])
-    except Exception as e:
-        print(f"[Error Transmitir] Fallo al escanear la tabla de conexiones: {e}")
-        return
-
-    print(f"Encontradas {len(connections)} conexiones para evaluar.")
-    
-    message_payload_str = json.dumps(message_payload_dict)
-    chefs_found = 0
-
-    for connection in connections:
-        connection_id = connection['connectionId']
-        user_role = connection.get('role', 'CLIENTE')
-        
-        if user_role == 'CHEF':
-            chefs_found += 1
-            try:
-                apigateway_client.post_to_connection(
-                    ConnectionId=connection_id,
-                    Data=message_payload_str.encode('utf-8')
-                )
-                print(f"[Info Transmitir] Pedido enviado a chef: {connection_id}")
-            except apigateway_client.exceptions.GoneException:
-                print(f"[Info Transmitir] Conexión de chef muerta {connection_id}. Limpiando.")
-                connections_table.delete_item(Key={'connectionId': connection_id})
-            except Exception as e:
-                print(f"[Error Transmitir] No se pudo enviar a chef {connection_id}: {e}")
-        else:
-            print(f"[Info Transmitir] Saltando conexión {connection_id} - Rol: {user_role} (no es chef)")
-    
-    print(f"[Info Transmitir] Pedido transmitido a {chefs_found} chefs conectados.")
-
 def connection_manager(event, context):
     connection_id = event['requestContext']['connectionId']
     route_key = event['requestContext']['routeKey']
@@ -233,11 +179,14 @@ def connection_manager(event, context):
             
             item = {
                 'connectionId': connection_id,
-                'role': query_params.get('role', 'CLIENTE'),
+                'role': query_params.get('role', 'USUARIO'),
+                'tenant_id': query_params.get('tenant_id'),
+                'uuid': query_params.get('uuid'),
             }
 
             table.put_item(Item=item)
             
+            print(f"Conexión registrada: {connection_id} con rol {item['role']}")
             return {'statusCode': 200, 'body': 'Conectado.'}
 
         except Exception as e:
