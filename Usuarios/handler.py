@@ -118,6 +118,7 @@ def publicarUbicacion(event, context):
         correo = body.get("correo")
         nombre = body.get("nombre")
         calle = body.get("calle")
+        rutas = body.get("rutas")  # Asumiendo que "rutas" es una lista de rutas asociadas al usuario
         
         try:
             lat_float = float(body["latitud"])
@@ -144,7 +145,8 @@ def publicarUbicacion(event, context):
             'latitud': lat_decimal,   
             'longitud': lon_decimal,
             'calle': calle,
-            'uuid': correo
+            'uuid': correo,
+            'rutas': rutas
         }
         
         ubicacionTable.put_item(Item=ubicacionJson)

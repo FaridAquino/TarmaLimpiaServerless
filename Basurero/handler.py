@@ -7,7 +7,7 @@ from decimal import Decimal
 RUTAS_TABLE = os.environ.get('RUTAS_TABLE')
 UBICACION_BASURERO_TABLE= os.environ.get('UBICACION_BASURERO_TABLE')
 CONNECTIONS_TABLE = os.environ.get('CONNECTIONS_TABLE')
-USUARIOS_TABLE = os.environ.get('USUARIOS_TABLE')
+UBICACIONES_USUARIOS_TABLE = os.environ.get('UBICACIONES_USUARIOS_TABLE')
 def registrarRuta(event, context):
     try:
         if 'body' not in event or event['body'] is None:
@@ -17,8 +17,7 @@ def registrarRuta(event, context):
 
         # Datos de entrada
         # Se asume que el frontend o un proceso previo genera IDs únicos para los nodos (cruces/paradas)
-        # Si no tienes IDs, puedes generar un hash basado en las coordenadas redondeadas (GeoHash), 
-        # pero UUID es mejor si controlas los nodos.
+        ruta_id = body.get("ruta_id")
         origen_id = body["origen_id"] 
         destino_id = body["destino_id"]
         
@@ -37,6 +36,7 @@ def registrarRuta(event, context):
         rutaItem = {
             'tenant_id': origen_id,   # PK
             'uuid': destino_id, # SK
+            'ruta_id': ruta_id,
             'nombre_calle': nombre_calle,
             'coordenadas_origen': {'lat': lat_origen, 'lng': lng_origen},
             'coordenadas_destino': {'lat': lat_destino, 'lng': lng_destino},
@@ -60,7 +60,7 @@ def registrarRuta(event, context):
 #WEBSOCKET
 
 def transmitir(event, message_payload_dict):
-    if not CONNECTIONS_TABLE or not USUARIOS_TABLE:
+    if not CONNECTIONS_TABLE or not UBICACIONES_USUARIOS_TABLE:
         print("[Error] Variables de entorno de tablas no definidas.")
         return
 
@@ -92,7 +92,7 @@ def transmitir(event, message_payload_dict):
 
     print(f"Evaluando {len(connections)} conexiones.")
     
-    usuarios_table = boto3.resource('dynamodb').Table(USUARIOS_TABLE)
+    usuarios_table = boto3.resource('dynamodb').Table(UBICACIONES_USUARIOS_TABLE)
     message_bytes = json.dumps(message_payload_dict).encode('utf-8')
 
     for connection in connections:
@@ -139,7 +139,7 @@ def transmitir(event, message_payload_dict):
                 connections_table.delete_item(Key={'connectionId': connection_id})
             except Exception as e:
                 print(f"[Error] Fallo enviando a {connection_id}: {str(e)}")
-                
+
 def connection_manager(event, context):
     connection_id = event['requestContext']['connectionId']
     route_key = event['requestContext']['routeKey']
@@ -213,7 +213,7 @@ def publicarUbicacion(event, context):
     correo = body.get("correo")
     nombre = body.get("nombre")
     calle = body.get("calle")
-    ruta= body.get("ruta")
+    ruta_id= body.get("ruta_id")
         
     try:
         lat_float = float(body["latitud"])
@@ -241,7 +241,7 @@ def publicarUbicacion(event, context):
         'latitud': lat_decimal,   
         'longitud': lon_decimal,
         'calle': calle,
-        'ruta': ruta
+        'ruta_id': ruta_id
     }
     ubicacion={
         'calle': calle,

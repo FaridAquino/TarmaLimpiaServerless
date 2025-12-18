@@ -18,7 +18,7 @@ provider:
     RUTA_TABLE: ${self:custom.rutaTable}
     UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
     CONNECTIONS_TABLE: ConnectionsTarmaLimpia
-    USUARIOS_TABLE: UsuariosTarmaLimpia
+    UBICACIONES_USUARIOS_TABLE: UbicacionesUsuariosTarmaLimpia
 
 package:
   patterns:
