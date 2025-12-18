@@ -29,8 +29,15 @@ def registrarRuta(event, context):
         lat_destino = Decimal(str(body["lat_destino"]))
         lng_destino = Decimal(str(body["lng_destino"]))
 
-        rutasTable = boto3.resource('dynamodb').Table(RUTAS_TABLE)
-
+        try:
+            rutasTable = boto3.resource('dynamodb').Table(RUTAS_TABLE)
+        except Exception as e:
+            print(f"Error al conectar con la tabla de rutas: {e}")
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': 'Error de conexión con la base de datos'})
+            }
+        
         # Estructura de la Arista (Edge)
         rutaItem = {
             'tenant_id': origen_id,   # PK
@@ -232,8 +239,15 @@ def publicarUbicacion(event, context):
     lat_decimal = Decimal(str(lat_float))
     lon_decimal = Decimal(str(lon_float))
 
-    ubicacionTable = boto3.resource('dynamodb').Table(UBICACION_BASURERO_TABLE)
-        
+    try:
+        ubicacionTable = boto3.resource('dynamodb').Table(UBICACION_BASURERO_TABLE)
+    except Exception as e:
+        print(f"Error al conectar con la tabla de ubicaciones de basurero: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Error de conexión con la base de datos'})
+        }
+
     ubicacionJson = {
         'tenant_id': nombre,
         'uuid': correo,
