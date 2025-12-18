@@ -115,9 +115,8 @@ def transmitir(event, message_payload_dict):
                     ConnectionId=connection_id,
                     Data=message_bytes
                 )
+                print(f"[Éxito] Enviado a {connection_id}.")
 
-                # 4. Lógica de "Ruta Cercana"
-                # Solo consultamos a DynamoDB si tenemos los IDs y hay una ruta que comprobar
                 if ruta_basurero and tenant_id and user_uuid:
                     
 
