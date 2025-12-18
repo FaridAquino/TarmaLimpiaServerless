@@ -4,7 +4,7 @@ import boto3
 import uuid
 from decimal import Decimal
 
-RUTAS_TABLE = os.environ.get('RUTAS_TABLE')
+RUTAS_TABLE = os.environ.get('RUTA_TABLE')
 UBICACION_BASURERO_TABLE= os.environ.get('UBICACION_BASURERO_TABLE')
 CONNECTIONS_TABLE = os.environ.get('CONNECTIONS_TABLE')
 UBICACIONES_USUARIOS_TABLE = os.environ.get('UBICACIONES_USUARIOS_TABLE')
@@ -16,7 +16,6 @@ def registrarRuta(event, context):
         body = json.loads(event['body'])
 
         # Datos de entrada
-        # Se asume que el frontend o un proceso previo genera IDs únicos para los nodos (cruces/paradas)
         ruta_id = body.get("ruta_id")
         origen_id = body["origen_id"] 
         destino_id = body["destino_id"]
