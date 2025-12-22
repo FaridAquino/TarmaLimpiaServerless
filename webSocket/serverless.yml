@@ -1,0 +1,72 @@
+org: faridaquino
+service: websocket-tarma-limpia
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 29
+  region: us-east-1
+  stage: dev
+  
+  iam:
+    role: arn:aws:iam::885475026169:role/LabRole
+
+  websocketsApiName: websocket-tarma-limpia-${self:provider.stage}
+  websocketsApiRouteSelectionExpression: $request.body.action
+
+  environment:
+    CONNECTIONS_TABLE: ${self:custom.connectionsTable}
+    UBICACIONES_USUARIOS_TABLE: ${self:custom.ubicacionesUsuariosTable}
+    UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
+
+package:
+  patterns:
+    - '!node_modules/**'       # Ignorar carpeta de node
+    - '!.serverless/**'        # Ignorar carpeta oculta de despliegue
+    - '!venv/**'               # Ignorar entorno virtual (si tienes uno)
+    - '!__pycache__/**'        # Ignorar archivos compilados de python
+    - '!package-lock.json'
+    - ./** # Incluir todo lo demás (tu código + librerías instaladas)
+
+
+custom:
+  connectionsTable: ConnectionsTarmaLimpia
+  ubicacionesUsuariosTable: UbicacionesUsuariosTarmaLimpia
+  ubicacionBasureroTable: UbicacionBasureroTarmaLimpia
+  
+functions:
+
+  connectionHandler:
+    handler: handler.connection_manager 
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+
+  defaultHandler:
+    handler: handler.default_handler
+    events:
+      - websocket: $default
+  
+  publicarUbicacion:
+    handler: handler.publicarUbicacion
+    events:
+      - websocket:
+          route: publicarUbicacion
+
+resources:
+  Resources:
+
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.connectionsTable}
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+

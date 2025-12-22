@@ -1,5 +1,5 @@
 org: faridaquino
-service: api-tarma-limpia
+service: api-usuarios-tarma-limpia
 
 provider:
   name: aws
@@ -35,19 +35,6 @@ custom:
   connectionsTable: ConnectionsTarmaLimpia
   
 functions:
-
-  connectionHandler:
-    handler: handler.connection_manager 
-    events:
-      - websocket:
-          route: $connect
-      - websocket:
-          route: $disconnect
-
-  defaultHandler:
-    handler: handler.default_handler
-    events:
-      - websocket: $default
 
   registrarUsuario:
     handler: handler.registrarUsuario

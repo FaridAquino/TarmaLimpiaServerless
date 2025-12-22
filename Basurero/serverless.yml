@@ -1,5 +1,5 @@
 org: faridaquino
-service: api-tarma-limpia-basurero
+service: api-basurero-tarma-limpia
 
 provider:
   name: aws
@@ -35,20 +35,6 @@ custom:
   ubicacionBasureroTable: UbicacionBasureroTarmaLimpia
   
 functions:
-
-  connectionHandler:
-    handler: handler.connection_manager 
-    events:
-      - websocket:
-          route: $connect
-      - websocket:
-          route: $disconnect
-
-  defaultHandler:
-    handler: handler.default_handler
-    events:
-      - websocket: $default
-
   registrarRuta:
     handler: handler.registrarRuta
     events:
@@ -57,11 +43,6 @@ functions:
           method: post
           cors: true
 
-  publicarUbicacion:
-    handler: handler.publicarUbicacion
-    events:
-      - websocket:
-          route: publicarUbicacion
 
 resources:
   Resources:
