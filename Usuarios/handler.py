@@ -9,6 +9,7 @@ from decimal import Decimal
 USUARIOS_TABLE = os.environ['USUARIOS_TABLE']
 UBICACIONES_TABLE = os.environ['UBICACIONES_TABLE']
 CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
+UBICACION_BASURERO_TABLE=os.environ['UBICACION_BASURERO_TABLE']
 
 def registrarUsuario(event, context):
     try:
@@ -161,3 +162,49 @@ def publicarUbicacion(event, context):
     except Exception as e:
         print(e)
         return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+
+def obtenerUbicacionBasurero(event, context):
+    try:
+        if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body)'})}
+        
+        body = json.loads(event['body']) 
+
+        nombreBasurero = body.get("nombreBasurero")
+        correoBasurero = body.get("correoBasurero")
+
+        if not nombreBasurero or not correoBasurero:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Faltan parámetros requeridos: nombreBasurero y correoBasurero'})}
+        ubicacionTable = boto3.resource('dynamodb').Table(UBICACION_BASURERO_TABLE)
+        response = ubicacionTable.get_item(Key={'tenant_id': nombreBasurero, 'uuid': correoBasurero})
+
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'Ubicación no encontrada'})
+            }
+
+        ubicacion = response['Item']
+
+        calle=ubicacion.get('calle', 'N/A')
+        latitud=float(ubicacion.get('latitud', 0))
+        longitud=float(ubicacion.get('longitud', 0))
+        ruta_id=ubicacion.get('ruta_id', 'N/A')
+
+        ubicacionJson={
+            'calle': calle,
+            'latitud': latitud,
+            'longitud': longitud,
+            'ruta_id': ruta_id
+        }
+
+        return {
+            'statusCode': 200,
+            'body': {'ubicacion': ubicacionJson}
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
