@@ -17,7 +17,7 @@ provider:
   environment:
     RUTA_TABLE: ${self:custom.rutaTable}
     UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
-    CONNECTIONS_TABLE: ConnectionsTarmaLimpia
+    BASURERO_TABLE: ${self:custom.basureroTable}
     UBICACIONES_USUARIOS_TABLE: UbicacionesUsuariosTarmaLimpia
 
 package:
@@ -32,6 +32,7 @@ package:
 
 custom:
   rutaTable: RutaTarmaLimpia
+  basureroTable: BasureroTarmaLimpia
   ubicacionBasureroTable: UbicacionBasureroTarmaLimpia
   
 functions:
