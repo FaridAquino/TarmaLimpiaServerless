@@ -7,7 +7,6 @@ import hashlib
 from decimal import Decimal
 
 RUTAS_TABLE = os.environ.get('RUTA_TABLE')
-UBICACION_BASURERO_TABLE= os.environ.get('UBICACION_BASURERO_TABLE')
 BASURERO_TABLE=os.environ.get('BASURERO_TABLE')
 
 def registrarRuta(event, context):

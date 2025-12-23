@@ -18,7 +18,7 @@ provider:
     USUARIOS_TABLE: ${self:custom.usuariosTable}
     UBICACIONES_TABLE: ${self:custom.ubicacionesTable}
     CONNECTIONS_TABLE: ${self:custom.connectionsTable}
-    
+    UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
 package:
   patterns:
     - '!node_modules/**'       # Ignorar carpeta de node
@@ -33,6 +33,7 @@ custom:
   usuariosTable: UsuariosTarmaLimpia
   ubicacionesTable: UbicacionesTarmaLimpia
   connectionsTable: ConnectionsTarmaLimpia
+  ubicacionBasureroTable: UbicacionBasureroTarmaLimpia
   
 functions:
 
