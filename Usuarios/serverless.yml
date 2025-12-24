@@ -63,7 +63,7 @@ functions:
           cors: true
   
   obtenerRutas:
-    handler: handler.obtenerRutas
+    handler: handler.getRutas
     events:
       - http:
           path: /obtenerRutas
