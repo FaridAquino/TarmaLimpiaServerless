@@ -6,6 +6,12 @@ import uuid
 import boto3
 from decimal import Decimal
 
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
 USUARIOS_TABLE = os.environ['USUARIOS_TABLE']
 UBICACIONES_TABLE = os.environ['UBICACIONES_TABLE']
 CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
@@ -218,7 +224,7 @@ def getRutas(event, context):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'rutas': rutas})
+            'body': json.dumps({'rutas': rutas}, cls=DecimalEncoder)
         }
     except Exception as e:
         return {
