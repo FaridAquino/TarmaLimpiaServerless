@@ -10,6 +10,7 @@ USUARIOS_TABLE = os.environ['USUARIOS_TABLE']
 UBICACIONES_TABLE = os.environ['UBICACIONES_TABLE']
 CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
 UBICACION_BASURERO_TABLE=os.environ['UBICACION_BASURERO_TABLE']
+RUTAS_TABLE=os.environ['RUTAS_TABLE']
 
 def registrarUsuario(event, context):
     try:
@@ -203,6 +204,22 @@ def obtenerUbicacionBasurero(event, context):
             'body': {'ubicacion': ubicacionJson}
         }
 
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+
+def getRutas(event, context):
+    try:
+        rutaTable = boto3.resource('dynamodb').Table(RUTAS_TABLE)
+        response = rutaTable.scan()
+        rutas = response.get('Items', [])
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'rutas': rutas})
+        }
     except Exception as e:
         return {
             'statusCode': 500,

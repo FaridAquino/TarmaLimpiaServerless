@@ -19,6 +19,7 @@ provider:
     UBICACIONES_TABLE: ${self:custom.ubicacionesTable}
     CONNECTIONS_TABLE: ${self:custom.connectionsTable}
     UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
+    RUTAS_TABLE: RutaTarmaLimpia
 package:
   patterns:
     - '!node_modules/**'       # Ignorar carpeta de node
