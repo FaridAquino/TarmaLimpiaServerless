@@ -61,6 +61,14 @@ functions:
           path: /publicarUbicacion
           method: post
           cors: true
+  
+  obtenerRutas:
+    handler: handler.obtenerRutas
+    events:
+      - http:
+          path: /obtenerRutas
+          method: get
+          cors: true
 
 resources:
   Resources:
