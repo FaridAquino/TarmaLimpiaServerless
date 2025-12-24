@@ -96,7 +96,7 @@ def transmitir(event, message_payload_dict):
 def connection_manager(event, context):
     connection_id = event['requestContext']['connectionId']
     route_key = event['requestContext']['routeKey']
-
+    
     query_params = event.get('queryStringParameters', {}) or {}
 
     if not CONNECTIONS_TABLE:
@@ -111,6 +111,8 @@ def connection_manager(event, context):
             item = {
                 'connectionId': connection_id,
                 'role': query_params.get('role', 'BASURERO'),
+                'tenant_id': query_params.get('tenant_id', 'unknown'),
+                'uuid': query_params.get('uuid', 'unknown')
             }
 
             table.put_item(Item=item)
