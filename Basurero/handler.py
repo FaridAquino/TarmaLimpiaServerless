@@ -17,9 +17,8 @@ def registrarRuta(event, context):
         body = json.loads(event['body'])
 
         # Datos de entrada
-        ruta_id = body.get("ruta_id")
+        ruta_id = body["ruta_id"]
         origen_id = body["origen_id"] 
-        destino_id = body["destino_id"]
         
         # Datos descriptivos
         nombre_calle = body.get("nombre_calle", "Desconocida")
@@ -41,9 +40,8 @@ def registrarRuta(event, context):
         
         # Estructura de la Arista (Edge)
         rutaItem = {
-            'tenant_id': origen_id,   # PK
-            'uuid': destino_id, # SK
-            'ruta_id': ruta_id,
+            'tenant_id': ruta_id,   # PK
+            'uuid': origen_id, # SK
             'nombre_calle': nombre_calle,
             'coordenadas_origen': {'lat': lat_origen, 'lng': lng_origen},
             'coordenadas_destino': {'lat': lat_destino, 'lng': lng_destino},

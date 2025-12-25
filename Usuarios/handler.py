@@ -2,9 +2,10 @@ import hmac
 import json
 import os
 import hashlib
-import uuid
 import boto3
 from decimal import Decimal
+
+from boto3.dynamodb.conditions import Key
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -227,6 +228,38 @@ def getRutas(event, context):
             'body': json.dumps({'rutas': rutas}, cls=DecimalEncoder)
         }
     except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+
+def getTodasLasRutasDelTenant(event, context):
+    try:
+        query_params = event.get('queryStringParameters')
+        
+        if not query_params:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Faltan parámetros'})}
+
+        tenant_id = query_params.get('tenant_id')
+
+        if not tenant_id:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Falta el tenant_id'})}
+
+        rutaTable = boto3.resource('dynamodb').Table(RUTAS_TABLE)
+
+        response = rutaTable.query(
+            KeyConditionExpression=Key('tenant_id').eq(tenant_id)
+        )
+
+        items = response.get('Items', [])
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'rutas': items}, cls=DecimalEncoder)
+        }
+
+    except Exception as e:
+        print(f"Error: {e}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
