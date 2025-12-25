@@ -73,9 +73,10 @@ functions:
   obtenerRutasEspecifica:
     handler: handler.getRutaEspecifica
     events:
-      - http: /obtenerRutasEspecifica
-        method: get
-        cors: true
+      - http:
+          path: /obtenerRutasEspecifica
+          method: get
+          cors: true
 
 resources:
   Resources:
