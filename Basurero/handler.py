@@ -71,7 +71,6 @@ def registerBasurero(event, context):
 
         nombre = body['nombre']
         correo = body['correo']
-        contraseña = body['contraseña']
 
         contrasena=body["contrasena"]
 

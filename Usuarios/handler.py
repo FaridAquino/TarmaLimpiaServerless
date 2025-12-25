@@ -233,7 +233,7 @@ def getRutas(event, context):
             'body': json.dumps({'error': str(e)})
         }
 
-def getTodasLasRutasDelTenant(event, context):
+def getRutaEspecifica(event, context):
     try:
         query_params = event.get('queryStringParameters')
         

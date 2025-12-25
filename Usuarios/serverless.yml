@@ -69,6 +69,13 @@ functions:
           path: /obtenerRutas
           method: get
           cors: true
+  
+  obtenerRutasEspecifica:
+    handler: handler.getRutaEspecifica
+    events:
+      - http: /obtenerRutasEspecifica
+        method: get
+        cors: true
 
 resources:
   Resources:
