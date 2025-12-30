@@ -77,7 +77,15 @@ functions:
           path: /obtenerRutasEspecifica
           method: get
           cors: true
-
+  
+  registroCompleto:
+    handler: handler.registroCompleto
+    events:
+      - http:
+          path: /registroCompleto
+          method: get
+          cors: true
+          
 resources:
   Resources:
     UsuariosTable:
