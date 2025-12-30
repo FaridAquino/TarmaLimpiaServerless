@@ -42,7 +42,22 @@ functions:
           path: /registrarRuta
           method: post
           cors: true
+  
+  registrarBasurero:
+    handler: handler.registerBasurero
+    events:
+      - http:
+          path: /registrarBasurero
+          method: post
+          cors: true
 
+  loginBasurero:
+    handler: handler.loginBasurero
+    events:
+      - http:
+          path: /loginBasurero
+          method: post
+          cors: true
 
 resources:
   Resources:
