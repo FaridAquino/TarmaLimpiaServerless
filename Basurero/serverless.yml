@@ -93,7 +93,7 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
     
-    BASURERO_TABLE:
+    BasureroTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:custom.basureroTable}
