@@ -163,7 +163,7 @@ def publicarUbicacion(event, context):
 
         usuariosTable.update_item(
                 Key={'tenant_id': nombre, 'uuid': correo},
-                UpdateExpression='SET registroCompleto = :val',
+                UpdateExpression='SET registro_completo = :val',
                 ExpressionAttributeValues={':val': True}
             )
         
