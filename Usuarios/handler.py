@@ -47,7 +47,8 @@ def registrarUsuario(event, context):
             'tenant_id': nombre,
             'uuid':correo,
             'edad': edad,
-            'contrasena_hash': contrasena_hash
+            'contrasena_hash': contrasena_hash,
+            'registro_completo': False
         }
         usuarioTable.put_item(Item=usuarioJson) 
 
@@ -101,6 +102,7 @@ def loginUsuario(event, context):
         hash_real_bytes = bytes.fromhex(hash_real_hex)
 
         if hmac.compare_digest(hash_intento, hash_real_bytes):
+            
             return {
                 'statusCode': 200,
                 'body': json.dumps({'message': 'Login exitoso'})
@@ -148,7 +150,8 @@ def publicarUbicacion(event, context):
         lon_decimal = Decimal(str(lon_float))
 
         ubicacionTable = boto3.resource('dynamodb').Table(UBICACIONES_TABLE)
-        
+        usuariosTable=boto3.resource('dynamodb').Table(USUARIOS_TABLE)
+
         ubicacionJson = {
             'tenant_id': nombre,
             'latitud': lat_decimal,   
@@ -157,6 +160,12 @@ def publicarUbicacion(event, context):
             'uuid': correo,
             'rutas': rutas
         }
+
+        usuariosTable.update_item(
+                Key={'tenant_id': nombre, 'uuid': correo},
+                UpdateExpression='SET registroCompleto = :val',
+                ExpressionAttributeValues={':val': True}
+            )
         
         ubicacionTable.put_item(Item=ubicacionJson)
 
@@ -260,6 +269,42 @@ def getRutaEspecifica(event, context):
 
     except Exception as e:
         print(f"Error: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+
+def registroCompleto(event, context):
+    try:
+        if 'body' not in event or event['body'] is None:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'No se envió cuerpo (body)'})}
+        
+        body = json.loads(event['body']) 
+
+        nombre = body.get("nombre")
+        correo = body.get("correo")
+
+        usuarioTable=boto3.resource('dynamodb').Table(USUARIOS_TABLE)
+        response=usuarioTable.get_item(Key={'tenant_id': nombre, 'uuid': correo})
+        
+        if 'Item' not in response:
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'Usuario no encontrado'})
+            }
+
+        if (response['Item'].get('registro_completo') == True):
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'registro_completo': True})
+            }
+        else:
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'registro_completo': False})
+            }
+
+    except Exception as e:
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
