@@ -92,3 +92,21 @@ resources:
           - AttributeName: uuid
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+    
+    BASURERO_TABLE:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.basureroTable}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+    
+
