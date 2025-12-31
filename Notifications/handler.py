@@ -75,6 +75,7 @@ def registrarToken(event, context):
 
 def lambda_handler(event, context):
     print("Evento recibido de SNS:", json.dumps(event))
+    print(f"--- [DEBUG] Versión Firebase en Lambda: {firebase_admin.__version__} ---")
     for record in event['Records']:
         try:
             sns_message = json.loads(record['Sns']['Message'])
