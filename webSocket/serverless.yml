@@ -19,6 +19,10 @@ provider:
     UBICACIONES_USUARIOS_TABLE: ${self:custom.ubicacionesUsuariosTable}
     UBICACION_BASURERO_TABLE: ${self:custom.ubicacionBasureroTable}
 
+    #Nuevos environment variables para SNS
+    SNS_TOPIC_ARN: arn:aws:sns:us-east-1:738683684819:send-push-notification-topic
+    USERS_DEVICES_TABLE: UsersDevicesTarmaLimpia
+
 package:
   patterns:
     - '!node_modules/**'       # Ignorar carpeta de node

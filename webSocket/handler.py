@@ -11,6 +11,12 @@ CONNECTIONS_TABLE = os.environ['CONNECTIONS_TABLE']
 UBICACIONES_USUARIOS_TABLE=os.environ['UBICACIONES_USUARIOS_TABLE']
 UBICACION_BASURERO_TABLE=os.environ['UBICACION_BASURERO_TABLE']
 
+# NUEVAS VARIABLES NECESARIAS
+USERS_DEVICES_TABLE = os.environ.get('USERS_DEVICES_TABLE') 
+SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
+
+sns_client = boto3.client('sns')
+
 #WEBSOCKET
 
 def transmitir(event, message_payload_dict):
@@ -31,6 +37,53 @@ def transmitir(event, message_payload_dict):
     if not ubicacion_data:
         print("[Error] No hay datos de ubicación.")
         return
+
+    # ==============================================================================
+    # 🔔 LÓGICA SNS (NOTIFICACIONES PUSH)
+    # Enviamos a TODOS los usuarios de la tabla de dispositivos (Solo para pruebas)
+    # ==============================================================================
+    if SNS_TOPIC_ARN and USERS_DEVICES_TABLE:
+        try:
+            print("--- [SNS] Iniciando proceso de notificación masiva ---")
+            users_dev_table = boto3.resource('dynamodb').Table(USERS_DEVICES_TABLE)
+            
+            # A. Escaneamos la tabla para sacar todos los correos (tenant_id)
+            # NOTA: .scan() es costoso. En producción usa Query o lógica específica.
+            response_scan = users_dev_table.scan(
+                ProjectionExpression='tenant_id' 
+            )
+            items = response_scan.get('Items', [])
+            
+            # B. Extraemos IDs únicos (usamos set para evitar duplicados si hay paginación sucia)
+            # Tu Worker espera una lista de "correos" (que son tus tenant_id)
+            destinatarios = list(set([item['tenant_id'] for item in items]))
+
+            if destinatarios:
+                # C. Construimos el Payload EXACTAMENTE como lo espera tu Lambda Worker
+                sns_payload = {
+                    "correos": destinatarios,
+                    "title": "🚛 Camión en camino",
+                    "body": f"El recolector está pasando"
+                }
+
+                # D. Publicamos al SNS
+                sns_client.publish(
+                    TopicArn=SNS_TOPIC_ARN,
+                    Message=json.dumps(sns_payload)
+                )
+                print(f"[SNS] Mensaje enviado al Topic para {len(destinatarios)} usuarios.")
+            else:
+                print("[SNS] No se encontraron usuarios en la tabla para notificar.")
+
+        except Exception as e:
+            # Ponemos try/except para que si falla SNS, NO rompa el WebSocket
+            print(f"[Error SNS] Fallo al enviar notificación: {e}")
+    else:
+        print("[SNS] Omitido: Faltan variables SNS_TOPIC_ARN o USERS_DEVICES_TABLE")
+
+    # ==============================================================================
+    # 📡 LÓGICA WEBSOCKET (Tu código original sigue aquí)
+    # ==============================================================================
 
     connections_table = boto3.resource('dynamodb').Table(CONNECTIONS_TABLE)
     

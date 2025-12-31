@@ -5,6 +5,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 from boto3.dynamodb.conditions import Key
 
+from botocore.exceptions import ClientError
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("serviceAccountKey.json") # Asegúrate de subir este archivo con tu lambda
@@ -25,8 +26,14 @@ def registrarToken(event, context):
 
         body = json.loads(event['body'])
 
-        correo = body['correo']
-        device_token = body['device_token']
+        correo = body.get('correo')
+        device_token = body.get('device_token')
+        
+        if not correo or not device_token:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'Faltan datos (correo o device_token)'})
+            }
 
         usersDevicesTable = boto3.resource('dynamodb').Table(USERS_DEVICES_TABLE)
         
@@ -35,13 +42,32 @@ def registrarToken(event, context):
             'uuid': device_token
         }
         
-        usersDevicesTable.put_item(Item=usersDevicesJson)
+        try:
+            usersDevicesTable.put_item(
+                Item=usersDevicesJson,
+                ConditionExpression='attribute_not_exists(tenant_id)'
+            )
+            
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Token registrado exitosamente'})
+            }
 
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'message': 'Token registrado exitosamente'})
-        }
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                print(f"El token para {correo} ya existía. No se hizo nada.")
+                return {
+                    'statusCode': 200, # Retornamos 200 OK porque la solicitud fue procesada correctamente
+                    'body': json.dumps({
+                        'message': 'El dispositivo ya estaba registrado. No se realizaron cambios.',
+                        'status': 'skipped'
+                    })
+                }
+            else:
+                raise e
+
     except Exception as e:
+        print(f"Error crítico: {e}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
