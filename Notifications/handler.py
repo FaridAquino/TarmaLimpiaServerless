@@ -97,7 +97,7 @@ def process_message(data):
 
     tokens_to_send = []
     
-    # --- CORRECCIÓN AQUÍ: USAR QUERY ---
+    # 1. Obtener tokens de DynamoDB
     for tenant_id in target_users:
         try:
             response = table.query(
@@ -105,7 +105,9 @@ def process_message(data):
             )
             items = response.get('Items', [])
             for item in items:
-                if 'uuid' in item:
+                # Ojo: Asegúrate si en tu BD guardaste como 'uuid' o 'fcm_token'
+                # Según tu código anterior era 'uuid' (que usabas para el token)
+                if 'uuid' in item: 
                     tokens_to_send.append(item['uuid'])
         except Exception as e:
             print(f"Error consultando DynamoDB para {tenant_id}: {e}")
@@ -114,29 +116,37 @@ def process_message(data):
         print("No se encontraron tokens válidos en BD.")
         return
     
-    # Limpiamos duplicados por seguridad
+    # Limpiamos duplicados
     tokens_to_send = list(set(tokens_to_send))
 
-    # Construir mensaje Multicast
-    message = messaging.MulticastMessage(
-        notification=messaging.Notification(
-            title=titulo,
-            body=cuerpo,
-        ),
-        data={'click_action': 'FLUTTER_NOTIFICATION_CLICK'}, 
-        tokens=tokens_to_send,
-    )
+    print(f"--- [MODO SEGURO] Enviando 1 por 1 a {len(tokens_to_send)} dispositivos ---")
 
-    try:
-        response = messaging.send_multicast(message)
-        print(f'{response.success_count} mensajes enviados exitosamente.')
-        
-        if response.failure_count > 0:
-            for idx, resp in enumerate(response.responses):
-                if not resp.success:
-                    print(f"Fallo token {tokens_to_send[idx]}: {resp.exception}")
-                    # Aquí podrías agregar lógica para borrar el token inválido de DynamoDB
-                    
-    except Exception as e:
-        print(f"Error enviando a Firebase: {e}")
+    # 2. BUCLE DE ENVÍO INDIVIDUAL (A prueba de fallos)
+    enviados = 0
+    errores = 0
+
+    for token in tokens_to_send:
+        try:
+            # Creamos un mensaje individual para cada token
+            msg = messaging.Message(
+                notification=messaging.Notification(
+                    title=titulo,
+                    body=cuerpo,
+                ),
+                data={'click_action': 'FLUTTER_NOTIFICATION_CLICK'},
+                token=token # <--- IMPORTANTE: Usamos 'token' (singular)
+            )
+            
+            # Usamos .send() que es la función básica universal
+            response = messaging.send(msg)
+            enviados += 1
+            # print(f"Enviado OK. ID: {response}") # Descomentar si quieres mucho detalle
+            
+        except Exception as e:
+            print(f"Error enviando a token {token[:10]}...: {e}")
+            errores += 1
+            # Aquí podrías agregar lógica: Si el error dice "Unregistered", borrar de DynamoDB.
+
+    print(f"--- Resultado Final: {enviados} enviados, {errores} fallidos ---")
+
 
