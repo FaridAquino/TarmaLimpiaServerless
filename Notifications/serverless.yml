@@ -27,7 +27,14 @@ package:
 custom:
   usersDevices: UsersDevicesTarmaLimpia
   snsTopicName: send-push-notification-topic
-  
+
+  pythonRequirements:
+    dockerizePip: non-linux  # Esto es VITAL para firebase-admin si estás en Windows/Mac
+    layer: false
+
+plugins:
+  - serverless-python-requirements
+
 functions:
   registrarToken:
     handler: handler.registrarToken
