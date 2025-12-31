@@ -2,7 +2,6 @@ import json
 import hmac
 import os
 import boto3
-import uuid
 import hashlib
 from decimal import Decimal
 
