@@ -1,4 +1,3 @@
-org: faridaquino
 service: notifications-service
 
 provider:
@@ -7,31 +6,33 @@ provider:
   timeout: 29
   region: us-east-1
   stage: dev
-  
   iam:
     role: arn:aws:iam::738683684819:role/LabRole
 
   environment:
     USERS_DEVICES: ${self:custom.usersDevices}
+    # Agregamos esta variable para que la lambda sepa a qué SNS enviar (si lo necesita)
+    SNS_TOPIC_ARN: !Ref PushNotificationsTopic 
 
 package:
   patterns:
-    - '!node_modules/**'       # Ignorar carpeta de node
-    - '!.serverless/**'        # Ignorar carpeta oculta de despliegue
-    - '!venv/**'               # Ignorar entorno virtual (si tienes uno)
-    - '!__pycache__/**'        # Ignorar archivos compilados de python
+    - '!node_modules/**'       
+    - '!.serverless/**'        
+    - '!venv/**'               
+    - '!__pycache__/**'        
     - '!package-lock.json'
-    - ./** # Incluir todo lo demás (tu código + librerías instaladas)
-  
-
+    - ./** # --- CORRECCIÓN AQUÍ ---
+# 'custom' debe ser un bloque principal, alineado a la izquierda.
 custom:
   usersDevices: UsersDevicesTarmaLimpia
   snsTopicName: send-push-notification-topic
-
+  
+  # CONFIGURACIÓN DEL PLUGIN (CRUCIAL PARA QUE FUNCIONE EL IMPORT)
   pythonRequirements:
     dockerizePip: non-linux  # Esto es VITAL para firebase-admin si estás en Windows/Mac
-    layer: false
+    layer: false             # Por ahora lo metemos todo en el zip (más fácil)
 
+# AGREGAMOS LA SECCIÓN DE PLUGINS
 plugins:
   - serverless-python-requirements
 
@@ -47,8 +48,7 @@ functions:
   sendPushNotification:
     handler: handler.lambda_handler
     events:
-      # ESTO ES LO QUE VINCULA LA LAMBDA AL SNS
-      # Serverless creará el Topic automáticamente si no existe
+      # Vinculación correcta al recurso creado abajo
       - sns:
           arn: !Ref PushNotificationsTopic
           topicName: ${self:custom.snsTopicName}
@@ -71,10 +71,9 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
       
+    # Definición explícita del Topic
     PushNotificationsTopic:
       Type: AWS::SNS::Topic
       Properties:
         TopicName: ${self:custom.snsTopicName}
         DisplayName: "Notificaciones Tarma Limpia"
-    
-
